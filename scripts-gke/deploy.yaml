@@ -41,13 +41,42 @@ metadata:
   name: gate
 spec:
   ports:
-    - nodePort: 30500
-      port: 80
+    - port: 80
       protocol: TCP
       targetPort: 8080
   selector:
     tier: gate
-  type: NodePort
+  type: LoadBalancer
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: backend
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: backend
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 50
+
+---
+
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: gate
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: gate
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 50
 
 ---
 
@@ -59,7 +88,7 @@ metadata:
     tier: backend
     app: microservices
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       tier: backend
@@ -106,7 +135,7 @@ metadata:
     tier: gate
     app: microservices
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       tier: gate

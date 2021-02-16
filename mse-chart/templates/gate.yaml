@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "mse-chart.gate.deployment.name" . }}
+  labels:
+    {{- include "mse-chart.labels" . | nindent 4 }}
+    tier: gate
+spec:
+  replicas: {{ .Values.gate.deployment.replicas }}
+  selector:
+    matchLabels:
+      {{- include "mse-chart.selectorLabels" . | nindent 6 }}
+      tier: gate
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include "mse-chart.propertiesHash" . }}
+      labels:
+        {{- include "mse-chart.selectorLabels" . | nindent 8 }}
+        tier: gate
+    spec:
+      serviceAccountName: {{ include "mse-chart.serviceAccountName" . }}
+      containers:
+        - name: {{ include "mse-chart.gate.container.name" . }}
+          image: "{{ .Values.gate.image.name }}:{{ .Values.gate.image.tag }}"
+          imagePullPolicy: {{ .Values.gate.image.pullPolicy }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "mse-chart.urlConfig.defaultName" . }}
+          env:
+            - name: SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "mse-chart.secrets.defaultName" . }}
+                  key: secret
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 3
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+          resources:
+  {{- toYaml .Values.gate.container.resources | nindent 12 }}
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "mse-chart.gate.service.name" . }}
+  labels:
+    {{- include "mse-chart.labels" . | nindent 4 }}
+    tier: gate
+spec:
+  type: {{ .Values.gate.service.type }}
+  ports:
+    - port: {{ .Values.gate.service.port }}
+      protocol: TCP
+      targetPort: 8080
+      name: http
+  selector:
+    {{- include "mse-chart.selectorLabels" . | nindent 4 }}
+    tier: gate
+
+---
+
+  {{- if .Values.gate.hpa.enabled -}}
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "mse-chart.gate.hpa.name" . }}
+  labels:
+    {{- include "mse-chart.labels" . | nindent 4 }}
+    tier: gate
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "mse-chart.gate.deployment.name" . }}
+  minReplicas: {{ .Values.gate.hpa.minReplicas }}
+  maxReplicas: {{ .Values.gate.hpa.maxReplicas }}
+  targetCPUUtilizationPercentage: {{ .Values.gate.hpa.targetCPUUtilizationPercentage }}
+  {{- end -}}

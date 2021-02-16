@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "mse-chart.urlConfig.defaultName" . }}
+  labels:
+  {{- include "mse-chart.labels" . | nindent 4 }}
+data:
+  BACKEND_URL: "http://{{ include "mse-chart.backend.service.name" . }}:{{ .Values.backend.service.port }}/"

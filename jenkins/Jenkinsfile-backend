@@ -11,7 +11,8 @@ pipeline {
     IMAGE_NAME_LATEST = "${env.IMAGE_BASE}:latest"
     DOCKERFILE_NAME = "Dockerfile-packaged"
     HELM_CHART_VERSION = '1.0.0'
-    HELM_CHART_NAME = "mse-chart-${HELM_CHART_VERSION}.tgz"
+    HELM_REPO_NAME = 'mse-repo'
+    HELM_CHART_NAME = "${HELM_REPO_NAME}/mse-chart-${HELM_CHART_VERSION}.tgz"
   }
   stages {
     stage("Prepare container") {

@@ -68,7 +68,7 @@ pipeline {
       }
       steps {
         withKubeConfig([credentialsId: 'kubernetes-creds', serverUrl: "${CLUSTER_URL}", namespace: "${CLUSTER_NAMESPACE}"]) {
-          sh "helm status mse-project; helm list"
+          sh "helm repo list"
           sh "helm upgrade ${HELM_PROJECT} ${HELM_CHART_NAME} --debug -v 10 --reuse-values --version ${HELM_CHART_VERSION} --set backend.image.tag=${env.IMAGE_TAG}"
         }
       }

@@ -71,7 +71,7 @@ pipeline {
         withKubeConfig([credentialsId: 'kubernetes-creds', serverUrl: "${CLUSTER_URL}", namespace: "${CLUSTER_NAMESPACE}"]) {
           sh "helm repo add ${HELM_REPO_NAME} ${HELM_REPO_URL}"
           sh "helm repo update"
-          sh "helm upgrade ${HELM_PROJECT} ${HELM_CHART} --debug -v 10 --reuse-values --version ${HELM_CHART_VERSION} --set backend.image.tag=${env.IMAGE_TAG}"
+          sh "helm upgrade ${HELM_PROJECT} ${HELM_CHART} --reuse-values --version ${HELM_CHART_VERSION} --set backend.image.tag=${env.IMAGE_TAG}"
         }
       }
     }
